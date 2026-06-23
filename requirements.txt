@@ -1,0 +1,6 @@
+python-dotenv
+psycopg2
+requests
+langgraph 
+langchain 
+langchain-core
