@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+
+# Docker
+*.pid
+
+# Testing
+.coverage
+pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Terraform
+.terraform/
+
+# AWS
+.aws/
+
+# Vector DB
+faiss_index/
+
+# Local DB
+*.sqlite3
