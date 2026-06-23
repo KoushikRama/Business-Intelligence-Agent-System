@@ -4,3 +4,8 @@ requests
 langgraph 
 langchain 
 langchain-core
+chromadb 
+python-docx 
+langchain-text-splitters
+chromadb
+langchain-ollama

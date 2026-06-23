@@ -6,31 +6,39 @@ from llm.llm_client import call_llm
 def build_sql_prompt(user_question: str) -> str:
     schema_text = get_database_schema()
     return f"""
-You are a PostgreSQL SQL generation agent for a Business Intelligence platform.
+You are a PostgreSQL SQL generation tool for a Business Intelligence platform.
 
 Your job is to generate ONE valid PostgreSQL SELECT query.
 
 Database Access Policy:
 - The database is READ ONLY.
 - Never generate INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE, GRANT, or REVOKE.
-- If the user asks to modify data, return:
-
+- If the user asks to modify, delete, insert, update, create, drop, or change records, return:
 SELECT 'This request is not allowed because the system only supports read-only database access.' AS message;
 
-User Access Policy:
-- Users may access customer, order, and payment analytics.
-- Users may NOT access employee salaries or private employee information.
-- If restricted information is requested, return:
+Allowed Business Data:
+- Users may access customer analytics.
+- Users may access order analytics.
+- Users may access payment analytics.
+- Users may access payment failure counts, payment statuses, payment methods, failure reasons, and payment amounts.
+- Users may access business metrics such as counts, totals, averages, revenue, order status, and customer segments.
 
+Restricted Data:
+- Users may NOT access employee salaries.
+- Users may NOT access private employee HR records.
+- Users may NOT access passwords, secrets, tokens, or authentication credentials.
+- If the user asks for restricted employee/private/security data, return:
 SELECT 'You do not have permission to access this information.' AS message;
 
 Schema Rules:
 - Use ONLY tables and columns present in the schema.
 - Never invent table names.
 - Never invent column names.
+- Never invent filters, values, joins, regions, states, statuses, dates, or business rules that are not requested by the user.
 - If the question cannot be answered from the schema, return:
 SELECT 'Question cannot be answered from available schema.' AS message;
 
+External Topic Rules:
 - If the question is about external topics such as weather, sports, stock prices, news, celebrities, or public events, return:
 SELECT 'Question cannot be answered from available schema.' AS message;
 
@@ -44,7 +52,7 @@ SQL Rules:
 - Do not generate subqueries unless absolutely necessary.
 - Do not generate CTEs.
 - Do not generate window functions.
-- Do not guess values that do not exist in the schema.
+- Use ILIKE for text filters.
 - When using JOINs, always use table aliases.
 - When using JOINs, always qualify column names with aliases.
 - Never use unqualified column names in JOIN queries.
@@ -53,19 +61,6 @@ Aggregation Rules:
 - If COUNT(), SUM(), AVG(), MIN(), MAX() are used:
   - Every non-aggregated selected column must appear in GROUP BY.
 - Never mix aggregate and non-aggregate columns without GROUP BY.
-
-Examples:
-
-Question:
-How is the business doing?
-
-SQL:
-SELECT 
-    COUNT(DISTINCT c.customer_id) AS total_customers,
-    COUNT(o.order_id) AS total_orders,
-    SUM(o.total_amount) AS total_revenue
-FROM customers c
-JOIN orders o ON c.customer_id = o.customer_id;
 
 Database Schema:
 {schema_text}
@@ -108,9 +103,8 @@ def validate_sql(sql_query: str) -> bool:
 
 
 def sql_tool(state: dict) -> dict:
-    question = state["question"]
+    question = state.get("sql_question", state["question"])
     sql_query = generate_sql(question)
-
     print("SQL Tool Generated SQL:", sql_query)
 
     if not validate_sql(sql_query):

@@ -4,6 +4,9 @@ from typing import TypedDict, Optional, List, Dict, Any
 class AgentState(TypedDict):
     question: str
     tool_choice: Optional[str]
+    sql_question: str
+    rag_question:str
     sql_result: Optional[Dict[str, Any]]
+    rag_result: dict
     final_response: Optional[str]
     error: Optional[str]

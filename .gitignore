@@ -44,6 +44,10 @@ pytest_cache/
 
 # Vector DB
 faiss_index/
+chroma_db/
 
 # Local DB
 *.sqlite3
+
+# tests/
+tests/

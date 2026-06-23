@@ -4,13 +4,19 @@ from graph.bi_graph import run_graph
 def main():
 
     test_questions = [
-        "Hello",
-        "How many customers do we have?",
-        "How many payment failures occurred?",
-        "Show all failed payments",
-        "Show all employee salaries",
-        "Insert a new customer",
-        "Who won the NBA championship?"
+
+    # 1. Direct
+    "Hello, how are you today?",
+
+    # 2. SQL Only
+    "How many premium customers do we have?",
+
+    # 3. RAG Only
+    "What is the employee PTO policy?",
+
+    # 4. SQL + RAG
+    "How many payment failures occurred and what should customer support do according to the Payment Failure Handling SOP?"
+
     ]
 
     for i, question in enumerate(test_questions, start=1):
