@@ -16,10 +16,10 @@ def create_conversation() -> str:
     return conversation_id
 
 
-def save_message(conversation_id: str, role: str, message: str) -> None:
+def save_message(conversation_id: str, role: str, message: str) -> str:
     message_id = str(uuid.uuid4())
 
-    safe_message = message.replace("'", "''")
+    cleaned_message = message.replace("'", "''")
 
     query = f"""
     INSERT INTO messages(
@@ -32,11 +32,13 @@ def save_message(conversation_id: str, role: str, message: str) -> None:
         '{message_id}',
         '{conversation_id}',
         '{role}',
-        '{safe_message}'
+        '{cleaned_message}'
     );
     """
 
     execute_insert_query(query)
+
+    return message_id
 
 
 def get_recent_messages(conversation_id: str, limit: int) -> list[dict]:
