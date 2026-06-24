@@ -38,9 +38,9 @@ def main():
     ]
 
     test_questions_set3 = [
-        "When i asked about orders, it was about the premium customers"
+        "Which region are those customers from?",
+        "What products did those customers purchase?"
     ]
-
     # conversation_id = create_conversation()
     conversation_id = "cf034eb2-bca9-4058-bdf8-7bebb6d3a5ec"
     for i, question in enumerate(test_questions_set3, start=1):
