@@ -24,11 +24,11 @@ Content:
 
     return context
 
-
 def build_response_prompt(
     question: str,
     sql_result: dict | None = None,
-    rag_result: dict | None = None
+    rag_result: dict | None = None,
+    recent_messages: list | None = None
 ) -> str:
 
     rag_context = format_rag_context(rag_result)
@@ -36,28 +36,84 @@ def build_response_prompt(
     return f"""
 You are a Business Intelligence Assistant.
 
-Your job is to answer the user's question using the available tool results.
+Your job is to answer the user's question using the available information.
 
-Rules:
-- Use only the provided SQL result and/or retrieved document context.
-- Do not invent facts.
-- If SQL result is available, use it for business numbers and metrics.
-- If document context is available, use it for policies, SOPs, procedures, and guidance.
-- If both SQL and document context are available, combine them naturally.
-- If the answer is not available in the provided information, say so clearly.
-- Be concise and business-friendly.
-- Mention source document names when answering from documents.
+Available Information:
+1. Recent Conversation
+2. SQL Results
+3. Company Document Context
 
-User Question:
+=========================================
+USAGE RULES
+=========================================
+
+Use Recent Conversation for:
+- answering questions about previous messages
+- summarizing recent discussion
+- explaining previous answers
+- resolving references such as:
+  - it
+  - that
+  - those
+  - previous question
+  - previous answer
+
+Use SQL Results for:
+- counts
+- totals
+- revenue
+- orders
+- customers
+- payments
+- business metrics
+
+Use Company Document Context for:
+- policies
+- SOPs
+- procedures
+- employee guidelines
+- escalation guides
+
+If both SQL and document context are available:
+- combine them into a single answer.
+
+If Recent Conversation alone answers the question:
+- answer directly from memory.
+- do not mention SQL or documents.
+
+If information is missing:
+- say so clearly.
+- do not invent facts.
+
+Be concise and business-friendly.
+
+=========================================
+USER QUESTION
+=========================================
+
 {question}
 
-SQL Result:
+=========================================
+RECENT CONVERSATION
+=========================================
+
+{recent_messages}
+
+=========================================
+SQL RESULT
+=========================================
+
 {sql_result}
 
-Retrieved Document Context:
+=========================================
+DOCUMENT CONTEXT
+=========================================
+
 {rag_context}
 
-Final Answer:
+=========================================
+FINAL ANSWER
+=========================================
 """
 
 
@@ -66,6 +122,7 @@ def response_node(state: dict) -> dict:
 
     sql_result = state.get("sql_result")
     rag_result = state.get("rag_result")
+    recent_messages = state.get("recent_messages")
 
     if not sql_result and not rag_result:
         return {
@@ -75,7 +132,8 @@ def response_node(state: dict) -> dict:
     prompt = build_response_prompt(
         question=question,
         sql_result=sql_result,
-        rag_result=rag_result
+        rag_result=rag_result,
+        recent_messages=recent_messages
     )
 
     response = call_llm(prompt)

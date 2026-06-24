@@ -30,3 +30,27 @@ def execute_select_query(query: str):
 
         if connection:
             close_connection(connection)
+
+def execute_insert_query(query: str):
+    connection = None
+    cursor = None
+
+    try:
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute(query)
+        connection.commit()
+
+        return
+
+    except Exception as error:
+        print(f"Query execution failed: {error}")
+        raise
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if connection:
+            close_connection(connection)

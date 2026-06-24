@@ -1,50 +1,121 @@
 from llm.llm_client import call_llm
 
-
-def build_bi_agent_prompt(question: str) -> str:
+def build_bi_agent_prompt(question: str, recent_messages: list) -> str:
     return f"""
 You are the routing agent for a Business Intelligence Assistant.
 
-Choose exactly one route:
+Your job is to choose EXACTLY ONE route for the current question.
+
+Available Routes:
+
+1. direct
+2. sql
+3. rag
+4. sql_rag
+
+
+=========================================
+MEMORY USAGE RULES
+=========================================
+
+Recent messages are provided as conversation context.
+
+Use recent messages to understand:
+- follow-up questions
+- references such as:
+    - "them"
+    - "those customers"
+    - "that policy"
+    - "that issue"
+    - "what was my previous question"
+- requests to summarize recent discussion
+- requests to explain previous answers
+
+IMPORTANT:
+Choose direct if the question can be answered entirely from recent messages.
+
+IMPORTANT:
+Do NOT choose direct if fresh business data or company documents are required.
+
+=========================================
+ROUTE: direct
+=========================================
+choose direct when the user question doesn't involve searching database for metrics and document knowledge
+
+Examples:
+- casual talk - hi, hello, hey etc.
+- non business information -sports, weather, news, casual etc.
+- The question can be answered from recent messages like "what was my previous question?", "summarize what we discussed" etc.
+
+=========================================
+ROUTE: sql
+=========================================
+
+Choose sql when the question requires only structured business data.
+
+Examples:
+- customers
+- orders
+- payments
+- revenue
+- counts
+- totals
+- analytics
+- business metrics
+- customer segments
+- payment statistics
+- database records
+
+Choose sql ONLY when company document knowledge is not needed.
+
+=========================================
+ROUTE: rag
+=========================================
+
+Choose rag when the question requires only company document knowledge.
+
+Examples:
+- PTO policy
+- employee handbook
+- SOPs
+- procedures
+- password policy
+- IT security policy
+- refund policy
+- escalation guide
+- support procedures
+
+Choose rag ONLY when database information is not needed.
+
+=========================================
+ROUTE: sql_rag
+=========================================
+
+Choose sql_rag when BOTH sql aand rag are required:
+
+1. Structured business data from SQL
+2. Company policy/procedure/SOP information from documents
+3. you must choose sql_rag when both 1 and 2 resources are needed to answer the question
+
+=========================================
+OUTPUT RULES
+=========================================
+
+Return ONLY one word:
 
 direct
 sql
 rag
 sql_rag
 
-Route meanings:
-
-direct:
-Use for greetings, small talk, jokes, or casual conversation.
-
-sql:
-Use when the question needs only structured database information:
-customers, orders, payments, revenue, counts, totals, metrics, analytics.
-choose when you are sure that document knowledge is not needed.
-
-rag:
-Use when the question needs only company document knowledge:
-policies, SOPs, procedures, PTO, IT security, password policy, refund policy,
-payment failure SOP, escalation guides, support procedures.
-choose when you are sure that structured databse information is not needed.
-
-sql_rag:
-Use when the question needs BOTH:
-1. database/business data from SQL
-2. policy/SOP/procedure guidance from documents
-
-Choose sql_rag for questions like:
-- how many X and what should Y do according to policy
-- count X and explain the procedure
-- payment failures and what support should do
-- customer/order/payment data and what the SOP says
-- business metric and escalation steps
-
-Return only one word.
-Do not return JSON.
 Do not explain.
+Do not return JSON.
+Do not return markdown.
 
-Question:
+Previous Recent Messages:
+{recent_messages}
+
+Current Question:
 {question}
 """
 
@@ -95,8 +166,8 @@ def rule_based_route_override(question: str, llm_choice: str) -> str:
     return llm_choice
 
 
-def decide_tool(question: str) -> str:
-    prompt = build_bi_agent_prompt(question)
+def decide_tool(question: str, recent_messages: str) -> str:
+    prompt = build_bi_agent_prompt(question, recent_messages)
     response = call_llm(prompt).strip().lower()
 
     if "sql_rag" in response:
@@ -108,7 +179,7 @@ def decide_tool(question: str) -> str:
     else:
         llm_choice = "direct"
 
-    return rule_based_route_override(question, llm_choice)
+    return llm_choice
 
 
 def build_question_split_prompt(question: str) -> str:
@@ -185,25 +256,43 @@ def split_sql_rag_question(question: str) -> dict:
         }
 
 
-def direct_response(question: str) -> str:
+def direct_response(question: str, recent_messages: list) -> str:
     prompt = f"""
-You are a helpful business intelligence assistant.
+You are a helpful Business Intelligence Assistant.
 
-The user's message does not require database or document access.
-Respond naturally and concisely.
+The current user message does NOT require database access or document retrieval.
 
-User Message:
+Use the recent conversation only if it is relevant to the user's current message.
+
+Use recent conversation for:
+- answering what the previous question was
+- summarizing recent discussion
+- explaining a previous answer
+- continuing casual context
+- resolving references like "that", "it", "those", or "previous"
+
+Do NOT invent business data.
+Do NOT claim fresh database or document information.
+If the question needs new database data or company policy documents, say that the request requires another tool instead of answering from memory.
+
+Recent Conversation:
+{recent_messages}
+
+Current User Message:
 {question}
+
+Response:
 """
     return call_llm(prompt)
 
 
 def bi_agent(state: dict) -> dict:
     question = state["question"]
-    tool_choice = decide_tool(question)
+    recent_messages = state["recent_messages"]
+    tool_choice = decide_tool(question, recent_messages)
 
     if tool_choice == "direct":
-        response = direct_response(question)
+        response = direct_response(question, recent_messages)
         return {
             "tool_choice": "direct",
             "final_response": response

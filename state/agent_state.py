@@ -8,5 +8,9 @@ class AgentState(TypedDict):
     rag_question:str
     sql_result: Optional[Dict[str, Any]]
     rag_result: dict
+    conversation_id: str
+    conversation_summary: str
+    recent_messages: list
+    historical_messages: list
     final_response: Optional[str]
     error: Optional[str]
