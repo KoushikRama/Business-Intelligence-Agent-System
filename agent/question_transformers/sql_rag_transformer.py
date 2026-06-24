@@ -4,7 +4,8 @@ from utils.json_utils import extract_json_from_llm_response
 def build_sql_rag_split_prompt(
     question: str,
     recent_messages: list,
-    historical_messages: list
+    historical_messages: list,
+    conversation_summary:str
 ) -> str:
     return f"""
 You are helping a Business Intelligence Assistant split a mixed user question into tool-specific questions.
@@ -41,6 +42,9 @@ JSON format:
 Current Question:
 {question}
 
+Conversation Summary:
+{conversation_summary}
+
 Recent Messages:
 {recent_messages}
 
@@ -48,8 +52,8 @@ Historical Messages:
 {historical_messages}
 """
 
-def split_sql_rag_question(question: str, recent_messages:list, historical_messages:list) -> dict:
-    prompt = build_sql_rag_split_prompt(question, recent_messages, historical_messages)
+def split_sql_rag_question(question: str, recent_messages:list, historical_messages:list, conversation_summary:str) -> dict:
+    prompt = build_sql_rag_split_prompt(question, recent_messages, historical_messages, conversation_summary)
     response = call_llm(prompt)
     try:
         parsed = extract_json_from_llm_response(response)

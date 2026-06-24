@@ -4,7 +4,8 @@ from utils.json_utils import extract_json_from_llm_response
 def build_sql_rewrite_prompt(
     question: str,
     recent_messages: list,
-    historical_messages: list
+    historical_messages: list,
+    conversation_summary: str
 ) -> str:
     return f"""
 You rewrite a user's follow-up question into a clear SQL-focused question.
@@ -35,6 +36,9 @@ JSON format:
 Current Question:
 {question}
 
+Conversation Summary:
+{conversation_summary}
+
 Recent Messages:
 {recent_messages}
 
@@ -45,12 +49,14 @@ Historical Messages:
 def rewrite_sql_question(
     question: str,
     recent_messages: list,
-    historical_messages: list
+    historical_messages: list,
+    conversation_summary: str
 ) -> str:
     prompt = build_sql_rewrite_prompt(
         question,
         recent_messages,
-        historical_messages
+        historical_messages,
+        conversation_summary
     )
 
     response = call_llm(prompt)
