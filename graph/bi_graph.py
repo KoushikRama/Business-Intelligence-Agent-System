@@ -7,6 +7,7 @@ from agent.memory_node import memory_node
 from tools.sql_tool import sql_tool
 from tools.rag_tool import rag_tool
 from memory.conversation_store import save_message
+from memory.memory_vector_store import store_message_embedding
 
 
 
@@ -63,7 +64,10 @@ def run_graph(question: str, conversation_id:str):
 
     result = graph.invoke(initial_state)
 
-    save_message(conversation_id, "user", question)
-    save_message(conversation_id, "assistant", result["final_response"])
+    user_msg_id = save_message(conversation_id, "user", question)
+    store_message_embedding(user_msg_id, conversation_id, "user", question)
+
+    assistant_msg_id = save_message(conversation_id, "assistant", result["final_response"])
+    store_message_embedding(assistant_msg_id, conversation_id, "assistant", result["final_response"])
 
     return result["final_response"]
