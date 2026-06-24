@@ -1,6 +1,6 @@
 from utils.format_utils import format_rag_context
 
-def build_bi_agent_prompt(question: str, recent_messages: list, historical_messages: list) -> str:
+def build_bi_agent_prompt(question: str, recent_messages: list, historical_messages: list, conversation_summary: str) -> str:
     return f"""
 You are the routing agent for a Business Intelligence Assistant.
 
@@ -28,7 +28,10 @@ You are given two types of memory:
 - Older semantically relevant past messages
 - Use when the user asks about something discussed earlier
 
-Use memory to understand:
+3. Summary of entire conversation
+- Compact long-term summary of the conversation
+- Use for broad context, previous goals, major findings, and unresolved issues
+
 - follow-up questions
 - references such as "them", "those customers", "that policy", "that issue"
 - previous questions or previous answers
@@ -115,6 +118,9 @@ Do not explain.
 Do not return JSON.
 Do not return markdown.
 
+Conversation Summary:
+{conversation_summary}
+
 Previous Recent Messages:
 {recent_messages}
 
@@ -130,7 +136,8 @@ def build_response_node_prompt(
     sql_result: dict | None = None,
     rag_result: dict | None = None,
     recent_messages: list | None = None,
-    historical_messages: list | None = None
+    historical_messages: list | None = None,
+    conversation_summary: str | None = None
 ) -> str:
 
     rag_context = format_rag_context(rag_result)
@@ -149,6 +156,11 @@ Available Information:
 =========================================
 USAGE RULES
 =========================================
+Use Conversation Summary for:
+- broad long-term context
+- key previously established facts
+- unresolved issues
+- major prior findings
 
 Use Recent Conversation for:
 - immediate context
@@ -202,6 +214,12 @@ USER QUESTION
 {question}
 
 =========================================
+CONVERSATION SUMMARY
+=========================================
+
+{conversation_summary}
+
+=========================================
 RECENT CONVERSATION
 =========================================
 
@@ -230,7 +248,7 @@ FINAL ANSWER
 =========================================
 """
 
-def build_direct_response_prompt(question: str, recent_messages: list, historical_messages: list) -> str:
+def build_direct_response_prompt(question: str, recent_messages: list, historical_messages: list, conversation_summary:str) -> str:
     return f"""
 You are a helpful Business Intelligence Assistant.
 
@@ -240,7 +258,15 @@ Use memory only if it is relevant to the user's current message.
 
 Memory Types:
 
-1. Recent Conversation
+1. Conversation Summary
+Use for:
+- broad conversation context
+- previously established facts
+- key findings
+- unresolved issues
+- long-term references
+
+2. Recent Conversation
 Use for:
 - previous question
 - previous answer
@@ -248,7 +274,7 @@ Use for:
 - explaining a recent answer
 - resolving references like "that", "it", "those", or "previous"
 
-2. Historical Conversation
+3. Historical Conversation
 Use for:
 - older but relevant previous discussion
 - questions like "what did we discuss about..."
@@ -258,6 +284,9 @@ Use for:
 Do NOT invent business data.
 Do NOT claim fresh database or document information.
 If the question needs new database data or company policy documents, say that it requires another tool.
+
+Conversation Summary:
+{conversation_summary}
 
 Recent Conversation:
 {recent_messages}

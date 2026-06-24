@@ -11,6 +11,7 @@ def response_node(state: dict) -> dict:
     rag_result = state.get("rag_result")
     recent_messages = state.get("recent_messages")
     historical_messages = state.get("historical_messages")
+    conversation_summary = state.get("conversation_summary")
 
     if not sql_result and not rag_result:
         return {
@@ -22,7 +23,8 @@ def response_node(state: dict) -> dict:
         sql_result=sql_result,
         rag_result=rag_result,
         recent_messages=recent_messages,
-        historical_messages = historical_messages
+        historical_messages = historical_messages,
+        conversation_summary=conversation_summary
     )
 
     response = call_llm(prompt)

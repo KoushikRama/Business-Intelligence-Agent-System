@@ -5,8 +5,8 @@ from agent.question_transformers.sql_rag_transformer import split_sql_rag_questi
 from agent.response_node import direct_response
 from agent.agent_prompts import build_bi_agent_prompt, build_direct_response_prompt
 
-def decide_tool(question: str, recent_messages: str, historical_messages: list) -> str:
-    prompt = build_bi_agent_prompt(question, recent_messages, historical_messages)
+def decide_tool(question: str, recent_messages: str, historical_messages: list, conversation_summary:str) -> str:
+    prompt = build_bi_agent_prompt(question, recent_messages, historical_messages, conversation_summary)
     response = call_llm(prompt).strip().lower()
 
     if "sql_rag" in response:
@@ -24,10 +24,11 @@ def bi_agent(state: dict) -> dict:
     question = state["question"]
     recent_messages = state["recent_messages"]
     historical_messages = state["historical_messages"]
-    tool_choice = decide_tool(question, recent_messages, historical_messages)
+    conversation_summary = state["conversation_summary"]
+    tool_choice = decide_tool(question, recent_messages, historical_messages, conversation_summary)
 
     if tool_choice == "direct":
-        prompt = build_direct_response_prompt(question, recent_messages, historical_messages)
+        prompt = build_direct_response_prompt(question, recent_messages, historical_messages, conversation_summary)
         response = direct_response(prompt)
         return {
             "tool_choice": "direct",
@@ -38,7 +39,8 @@ def bi_agent(state: dict) -> dict:
         sql_question = rewrite_sql_question(
             question,
             recent_messages,
-            historical_messages
+            historical_messages,
+            conversation_summary
         )
         print("SQL Question:", sql_question)
 
@@ -52,7 +54,8 @@ def bi_agent(state: dict) -> dict:
         rag_question = rewrite_rag_question(
             question,
             recent_messages,
-            historical_messages
+            historical_messages,
+            conversation_summary
         )
         print("RAG Question:", rag_question)
 
@@ -63,7 +66,7 @@ def bi_agent(state: dict) -> dict:
         }
 
     if tool_choice == "sql_rag":
-        split_questions = split_sql_rag_question(question, recent_messages, historical_messages)
+        split_questions = split_sql_rag_question(question, recent_messages, historical_messages, conversation_summary)
         print("Tool choice made: sql_rag")
         print("SQL Question:", split_questions["sql_question"])
         print("RAG Question:", split_questions["rag_question"])
