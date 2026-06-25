@@ -4,29 +4,23 @@ from memory.conversation_store import create_conversation
 def main():
 
     test_questions = [
-        # #1. Direct greeting
-        # "Hello, how are you today?",
+        # Simple workflow expected
+        "How many customers do we have?",
+        "What is the refund policy?",
+        "How many completed orders are there?",
+        "What is the IT security and password policy?",
 
-        # # 2. SQL only
-        # "How many premium customers do we have?",
+        # SQL + RAG simple workflow expected
+        "How many failed payments are there and what should support do according to the SOP?",
 
-        # # 3. RAG only
-        # "What is the employee PTO policy?",
+        # # ReAct expected
+        # "That result does not look right, check again.",
+        # "Why are those numbers inconsistent?",
+        # "Can you verify that from the database?",
 
-        # 4. SQL + RAG
-        "How many payment failures occurred and what should customer support do according to the Payment Failure Handling SOP?",
-
-        # 5. Recent memory - previous question
-        "What was my previous question?",
-
-        # 6. Recent memory - summarize recent chat
-        "Summarize what we just discussed.",
-
-        # 7. Recent memory + SQL follow-up
-        "What about their orders?",
-
-        # 8. Recent memory + RAG follow-up
-        "What does that policy say about approval?"
+        # # Complex/ReAct expected
+        # "Investigate why completed orders may be lower than expected.",
+        # "Analyze payment failures and recommend actions."
     ]
 
     test_questions_set2 = [
@@ -38,12 +32,18 @@ def main():
     ]
 
     test_questions_set3 = [
-        "Which region are those customers from?",
-        "What products did those customers purchase?"
+        "How many premium customers do we have?",
+        "What is the PTO policy?",
+        "How many payment failures occurred and what should support do?",
+        "What about their orders?",
+        # "Why did revenue drop this month?",
+        # "That was wrong, try again."
     ]
+    next_question = ["Just give me only the number of failed payment, no extra text"]
     # conversation_id = create_conversation()
-    conversation_id = "cf034eb2-bca9-4058-bdf8-7bebb6d3a5ec"
-    for i, question in enumerate(test_questions_set3, start=1):
+    # print("conv_id:",conversation_id)
+    conversation_id = "c0a95ccc-e09b-410c-aa89-3822de43eb7d"
+    for i, question in enumerate(next_question, start=1):
 
         print("\n" + "=" * 80)
         print(f"QUESTION {i}: {question}")
