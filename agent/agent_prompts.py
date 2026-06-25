@@ -137,7 +137,9 @@ def build_response_node_prompt(
     rag_result: dict | None = None,
     recent_messages: list | None = None,
     historical_messages: list | None = None,
-    conversation_summary: str | None = None
+    conversation_summary: str | None = None,
+    react_thought: str | None = None,
+    react_goal: str | None = None
 ) -> str:
 
     rag_context = format_rag_context(rag_result)
@@ -148,14 +150,17 @@ You are a Business Intelligence Assistant.
 Your job is to answer the user's question using the available information.
 
 Available Information:
-1. Recent Conversation
-2. Historical Conversation
-3. SQL Results
-4. Company Document Context
+1. Conversation Summary
+2. Recent Conversation
+3. Historical Conversation
+4. SQL Results
+5. Company Document Context
+6. ReAct Execution Context
 
 =========================================
 USAGE RULES
 =========================================
+
 Use Conversation Summary for:
 - broad long-term context
 - key previously established facts
@@ -190,22 +195,64 @@ Use Company Document Context for:
 - employee guidelines
 - escalation guides
 
-If memory alone answers the question:
+=========================================
+REACT EXECUTION CONTEXT
+=========================================
+
+ReAct Thought:
+{react_thought}
+
+ReAct Goal:
+{react_goal}
+
+The ReAct Thought and ReAct Goal explain WHY the tool was invoked and WHAT the assistant was trying to verify.
+
+Use them only to:
+- understand the purpose of the tool execution
+- determine what the final answer should focus on
+- ensure the response addresses the user's actual concern
+
+Do NOT treat the ReAct Thought or ReAct Goal as factual evidence.
+
+Only use these as factual sources:
+- SQL Results
+- Company Document Context
+
+Conversation memory is context, not fresh evidence.
+
+=========================================
+ANSWERING RULES
+=========================================
+
+If conversation memory alone answers the question:
 - answer directly from memory
 - do not mention SQL or documents
 
-If SQL and document context are both available:
-- combine them into a single answer
+If SQL Results are available:
+- treat them as the source of truth for structured business data
 
-If memory clarifies the question but SQL/RAG provides the answer:
-- use memory to interpret the question
-- use SQL/RAG as the factual source
+If Company Document Context is available:
+- treat it as the source of truth for company policies, SOPs and procedures
+
+If both SQL Results and Company Document Context are available:
+- combine them naturally into a single answer
+
+If conversation memory helps interpret the user's question:
+- use memory only to understand the intent
+- use SQL/RAG as the factual evidence
+
+If the SQL or document results contradict previous assumptions:
+- trust the latest tool results
+- explicitly correct any previous mistake if necessary
 
 If information is missing:
-- say so clearly
+- clearly state what is unavailable
 - do not invent facts
 
-Be concise and business-friendly.
+Keep the answer:
+- concise
+- business-friendly
+- directly focused on the ReAct Goal when provided
 
 =========================================
 USER QUESTION
@@ -299,3 +346,4 @@ Current User Message:
 
 Response:
 """
+
