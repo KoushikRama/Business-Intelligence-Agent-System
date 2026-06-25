@@ -1,11 +1,14 @@
 from llm.llm_client import call_llm
 from utils.json_utils import extract_json_from_llm_response
 
+
 def build_rag_rewrite_prompt(
     question: str,
     recent_messages: list,
     historical_messages: list,
-    conversation_summary:str
+    conversation_summary: str | None = None,
+    react_thought: str | None = None,
+    react_goal: str | None = None
 ) -> str:
     return f"""
 You rewrite a user's follow-up question into a clear RAG-focused question.
@@ -19,6 +22,10 @@ Use memory only to resolve references like:
 - it
 - previous document
 - above
+
+Use the ReAct Thought and ReAct Goal to understand what the retrieval should accomplish.
+Do not treat the ReAct Thought or ReAct Goal as facts.
+They are only the agent's current reasoning objective.
 
 Rules:
 - Return only valid JSON.
@@ -36,6 +43,12 @@ JSON format:
 Current Question:
 {question}
 
+ReAct Thought:
+{react_thought}
+
+ReAct Goal:
+{react_goal}
+
 Conversation Summary:
 {conversation_summary}
 
@@ -46,23 +59,28 @@ Historical Messages:
 {historical_messages}
 """
 
+
 def rewrite_rag_question(
     question: str,
     recent_messages: list,
     historical_messages: list,
-    conversation_summary: str
+    conversation_summary: str | None = None,
+    react_thought: str | None = None,
+    react_goal: str | None = None
 ) -> str:
     prompt = build_rag_rewrite_prompt(
-        question,
-        recent_messages,
-        historical_messages,
-        conversation_summary
+        question=question,
+        recent_messages=recent_messages,
+        historical_messages=historical_messages,
+        conversation_summary=conversation_summary,
+        react_thought=react_thought,
+        react_goal=react_goal
     )
 
     response = call_llm(prompt)
 
     try:
         parsed = extract_json_from_llm_response(response)
-        return parsed.get("rag_question")
+        return parsed.get("rag_question") or question
     except Exception:
         return question
