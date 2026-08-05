@@ -20,6 +20,16 @@ def get_employee(employee_id: str):
 
     return result[0] if result else None
 
+def authenticate_employee(email:str, password:str):
+    query = f"""
+SELECT employee_id, first_name, last_name, job_role
+FROM employees
+WHERE email = '{email}' AND password = '{password}'; 
+"""
+    result = execute_select_query(query)
+
+    return result[0] if result else None
+
 def create_conversation(employee_id: str, title: str = "New Conversation"):
     conversation_id = str(uuid.uuid4())
     safe_title = title.replace("'", "''")

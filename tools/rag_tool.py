@@ -1,6 +1,5 @@
 from rag.retriever import retrieve_relevant_chunks
 
-
 def rag_tool(state: dict) -> dict:
     question = state.get("rag_question", state["question"])
     print("RAG tool is invoked")
